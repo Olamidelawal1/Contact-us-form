@@ -1,0 +1,153 @@
+import React, { useEffect, useState } from 'react'
+import axios from 'axios';
+import { nanoid } from 'nanoid'
+
+model.id = nanoid() 
+
+const PostData = () => {
+    // loading state 
+    const [loading, setLoading] = useState(true);
+    // data state
+    const [data, setData] = useState(null);
+    //error state
+    const [error, setError] = useState(null);
+
+
+
+const INITIAL_STATE = {name: ' ', email: ' ', subject: ' ', message: ' '}
+
+const VALIDATION = {
+
+    name: [
+        {
+            isValid: (value) => !!value,
+            message: 'Is required.',
+        },
+    ],
+
+    email: [
+        {
+            isValid: (value) => !!value,
+            message: 'Is required.',
+        },
+        {
+            isValid: (value) => /\S+@\S+\.\S+/.test(value),
+            message: 'Needs to be an email.',
+        },
+    ],
+
+    message: [
+        {
+            isValid: (value) => !!value,
+            message: 'Is required.',
+        },
+    ],
+    
+};
+
+const getErrorFields = (form) =>
+    Object.keys(form).reduce((acc, key) => {
+        if (!VALIDATION[key]) return acc;
+
+        const errorsPerField = VALIDATION[key]
+            // get a list of potential errors for each field
+            // by running through all the checks
+            .map((validation) => ({
+                isValid: validation.isValid(form[key]),
+                message: validation.message,
+            }))
+            // only keep the errors
+            .filter((errorPerField) => !errorPerField.isValid);
+
+        return { ...acc, [key]: errorsPerField };
+    }, {});
+
+    const ContactUsForm = (props) => {
+
+        const [form, setForm] = useState(INITIAL_STATE);
+    
+        const handleChange = (event) => {
+            const { id, name, email, subject, message } = event.target;
+            console.log(event)
+        }
+    
+        const errorFields = getErrorFields(form);
+        console.log(errorFields);
+    
+        const handleSubmit = (event) => {
+            event.preventDefault();
+    
+            const hasErrors = Object.values(errorFields).flat().length > 0;
+            if (hasErrors) return;
+            alert('Submission wasnt successful, try again!');
+            
+    
+            console.log('Name is ' + form.name)
+            console.log('Email is ' + form.email)
+            console.log('Subject is ' + form.subject)
+            console.log('Message is ' + form.message)
+    
+            props.submitForm(form)
+            setForm(INITIAL_STATE)
+        }
+    }
+    
+    
+    useEffect(() => {
+
+        const submitData = async () => {
+                try {
+                    const response = await axios.post('https://my-json-server.typicode.com/tundeojediran/contacts-api-server/inquiries');
+                    setData(response.data);
+                    setError(null);
+                } catch (err) {
+                    setError(err.message);
+                    setData(null);
+                } finally {
+                    setLoading(false);
+                }
+            };
+    
+            submitData();
+        }, [])
+
+        return (
+            <div style={{ padding: '8px' }}>
+                <form onSubmit={handleSubmit}>
+
+                    <div style={{ padding: '8px' }}>
+                        <label style={{ display: 'block' }} htmlFor="name">Name:</label>
+                        <input id= {model.id} type="text" name="name"
+                             value={form.name} onChange={handleChange} />
+                    </div>
+
+                    <div style={{ padding: '8px' }}>
+                        <label style={{ display: 'block' }} htmlFor="email">Email:</label>
+                        <input id= {model.id} type="text" value={form.email} onChange={handleChange} />
+                        {errorFields.email?.length ? (
+                            <span style={{ color: 'red' }}>
+                                {errorFields.email[0].message}
+                            </span>
+                        ) : null}
+                    </div>
+
+                    <div style={{ padding: '8px' }}>
+                        <label style={{ display: 'block' }} htmlFor="subject">Subject:</label>
+                        <input id= {model.id} type="text" name="subject"
+                             value={form.subject} onChange={handleChange} />
+                    </div>
+
+                    <div style={{ padding: '8px' }}>
+                        <label style={{ display: 'block' }} htmlFor="message">Message:</label>
+                        <input id= {model.id} type="text" name="message"
+                             value={form.message} onChange={handleChange} />
+                    </div>
+    
+    
+                    <button type='submit'>Submit</button>
+                </form>
+            </div>
+        )
+        
+    }
+    export default ContactUsForm;
